@@ -71,6 +71,8 @@ public class TrinoIcebergRestCatalogFactory
     private final boolean uniqueTableLocation;
     private final TypeManager typeManager;
     private final boolean caseInsensitiveNameMatching;
+    private final Optional<String> realmHeaderName;
+    private final Optional<String> realmName;
     private final Cache<Namespace, Namespace> remoteNamespaceMappingCache;
     private final Cache<TableIdentifier, TableIdentifier> remoteTableMappingCache;
 
@@ -109,6 +111,8 @@ public class TrinoIcebergRestCatalogFactory
         this.uniqueTableLocation = icebergConfig.isUniqueTableLocation();
         this.typeManager = requireNonNull(typeManager, "typeManager is null");
         this.caseInsensitiveNameMatching = restConfig.isCaseInsensitiveNameMatching();
+        this.realmHeaderName = restConfig.getRealmHeaderName();
+        this.realmName = restConfig.getRealmName();
         this.remoteNamespaceMappingCache = EvictableCacheBuilder.newBuilder()
                 .expireAfterWrite(restConfig.getCaseInsensitiveNameMatchingCacheTtl().toMillis(), MILLISECONDS)
                 .shareNothingWhenDisabled()
@@ -138,6 +142,10 @@ public class TrinoIcebergRestCatalogFactory
 
             if (vendedCredentialsEnabled) {
                 properties.put("header.X-Iceberg-Access-Delegation", "vended-credentials");
+            }
+
+            if (realmHeaderName.isPresent() && realmName.isPresent()) {
+                properties.put("header.".concat(realmHeaderName.get()), realmName.get());
             }
 
             RESTSessionCatalog icebergCatalogInstance = new RESTSessionCatalog(

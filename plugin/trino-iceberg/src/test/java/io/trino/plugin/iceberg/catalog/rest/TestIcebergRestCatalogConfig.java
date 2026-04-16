@@ -45,7 +45,9 @@ public class TestIcebergRestCatalogConfig
                 .setVendedCredentialsEnabled(false)
                 .setViewEndpointsEnabled(true)
                 .setCaseInsensitiveNameMatching(false)
-                .setCaseInsensitiveNameMatchingCacheTtl(new Duration(1, MINUTES)));
+                .setCaseInsensitiveNameMatchingCacheTtl(new Duration(1, MINUTES))
+                .setRealmHeaderName(null)
+                .setRealmName(null));
     }
 
     @Test
@@ -65,6 +67,8 @@ public class TestIcebergRestCatalogConfig
                 .put("iceberg.rest-catalog.view-endpoints-enabled", "false")
                 .put("iceberg.rest-catalog.case-insensitive-name-matching", "true")
                 .put("iceberg.rest-catalog.case-insensitive-name-matching.cache-ttl", "3m")
+                .put("iceberg.rest-catalog.realm-header-name", "Realm-Name")
+                .put("iceberg.rest-catalog.realm-name", "shadow")
                 .buildOrThrow();
 
         IcebergRestCatalogConfig expected = new IcebergRestCatalogConfig()
@@ -80,7 +84,9 @@ public class TestIcebergRestCatalogConfig
                 .setVendedCredentialsEnabled(true)
                 .setViewEndpointsEnabled(false)
                 .setCaseInsensitiveNameMatching(true)
-                .setCaseInsensitiveNameMatchingCacheTtl(new Duration(3, MINUTES));
+                .setCaseInsensitiveNameMatchingCacheTtl(new Duration(3, MINUTES))
+                .setRealmHeaderName("Realm-Name")
+                .setRealmName("shadow");
 
         assertFullMapping(properties, expected);
     }

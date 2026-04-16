@@ -536,6 +536,13 @@ following properties:
 * - `iceberg.rest-catalog.case-insensitive-name-matching.cache-ttl`
   - [Duration](prop-type-duration) for which case-insensitive namespace, table, 
     and view names are cached. Defaults to `1m`.
+* - `iceberg.rest-catalog.realm-header-name`
+  - The realm header name as implemented in Apache Polaris (optional). This should match the value of
+    the `polaris.realm-context.header-name` configuration value in Polaris. When enabled by Polaris,
+    the value here is typically set to `Polaris-Realm`.
+* - `iceberg.rest-catalog.realm-name`
+  - The realm header value as implemented in Apache Polaris (optional). This is the name of
+    the realm to which your catalog belongs. 
   :::
 
 The following example shows a minimal catalog configuration using an Iceberg
@@ -697,6 +704,24 @@ iceberg.nessie-catalog.default-warehouse-dir=/tmp
 
 The Nessie catalog does not support [view management](sql-view-management) or
 [materialized view management](sql-materialized-view-management).
+
+(iceberg-polaris-catalog)=
+### Polaris catalog
+
+The Apache Polaris project recommends the enforcement of realm header validation
+for production. This is enabled via the `polaris.realm-context.require-header: "true"`
+configuration within Polaris.
+
+In Polaris, the header name is configured via `polaris.realm-context.header-name`,
+which defaults to `Polaris-Realm`.
+
+If this feature is enabled in Polaris, the following configuration should be included
+for the Polaris catalog in Trino:
+
+```text
+iceberg.rest-catalog.realm-header-name=Polaris-Realm
+iceberg.rest-catalog.realm-name=example
+```
 
 (iceberg-snowflake-catalog)=
 ### Snowflake catalog

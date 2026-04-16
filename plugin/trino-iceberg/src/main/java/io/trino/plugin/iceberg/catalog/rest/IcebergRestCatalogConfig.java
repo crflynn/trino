@@ -59,6 +59,8 @@ public class IcebergRestCatalogConfig
     private boolean vendedCredentialsEnabled;
     private boolean viewEndpointsEnabled = true;
     private boolean caseInsensitiveNameMatching;
+    private Optional<String> realmHeaderName = Optional.empty();
+    private Optional<String> realmName = Optional.empty();
     private Duration caseInsensitiveNameMatchingCacheTtl = new Duration(1, MINUTES);
 
     @NotNull
@@ -221,6 +223,32 @@ public class IcebergRestCatalogConfig
     public IcebergRestCatalogConfig setCaseInsensitiveNameMatching(boolean caseInsensitiveNameMatching)
     {
         this.caseInsensitiveNameMatching = caseInsensitiveNameMatching;
+        return this;
+    }
+
+    public Optional<String> getRealmHeaderName()
+    {
+        return this.realmHeaderName;
+    }
+
+    @Config("iceberg.rest-catalog.realm-header-name")
+    @ConfigDescription("Realm context header name for Apache Polaris")
+    public IcebergRestCatalogConfig setRealmHeaderName(String realmHeaderName)
+    {
+        this.realmHeaderName = Optional.ofNullable(realmHeaderName);
+        return this;
+    }
+
+    public Optional<String> getRealmName()
+    {
+        return this.realmName;
+    }
+
+    @Config("iceberg.rest-catalog.realm-name")
+    @ConfigDescription("Realm context header value for Apache Polaris")
+    public IcebergRestCatalogConfig setRealmName(String realmName)
+    {
+        this.realmName = Optional.ofNullable(realmName);
         return this;
     }
 

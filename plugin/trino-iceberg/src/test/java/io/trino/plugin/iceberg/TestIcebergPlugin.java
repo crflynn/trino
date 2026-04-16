@@ -278,6 +278,23 @@ public class TestIcebergPlugin
     }
 
     @Test
+    public void testRealmHeaders()
+    {
+        ConnectorFactory factory = getConnectorFactory();
+        factory.create(
+                        "test",
+                        ImmutableMap.<String, String>builder()
+                                .put("iceberg.catalog.type", "rest")
+                                .put("iceberg.rest-catalog.uri", "https://foo:1234")
+                                .put("iceberg.rest-catalog.realm-header-name", "Polaris-Realm")
+                                .put("iceberg.rest-catalog.realm-name", "shadow")
+                                .put("bootstrap.quiet", "true")
+                                .buildOrThrow(),
+                        new TestingConnectorContext())
+                .shutdown();
+    }
+
+    @Test
     public void testJdbcCatalog()
     {
         ConnectorFactory factory = getConnectorFactory();

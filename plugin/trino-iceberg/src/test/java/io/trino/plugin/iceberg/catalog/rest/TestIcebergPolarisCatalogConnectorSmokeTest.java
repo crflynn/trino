@@ -24,6 +24,8 @@ import io.trino.spi.connector.SchemaTableName;
 import io.trino.testing.QueryRunner;
 import io.trino.testing.TestingConnectorBehavior;
 import org.apache.iceberg.BaseTable;
+import org.apache.iceberg.rest.HTTPClient;
+import org.apache.iceberg.rest.RESTSessionCatalog;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -31,8 +33,10 @@ import org.junit.jupiter.api.parallel.Isolated;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.google.common.io.MoreFiles.deleteRecursively;
@@ -89,6 +93,8 @@ final class TestIcebergPolarisCatalogConnectorSmokeTest
                 .addIcebergProperty("iceberg.rest-catalog.security", "OAUTH2")
                 .addIcebergProperty("iceberg.rest-catalog.oauth2.credential", TestingPolarisCatalog.CREDENTIAL)
                 .addIcebergProperty("iceberg.rest-catalog.oauth2.scope", "PRINCIPAL_ROLE:ALL")
+                .addIcebergProperty("iceberg.rest-catalog.realm-header-name", "Polaris-Realm")
+                .addIcebergProperty("iceberg.rest-catalog.realm-name", "shadow")
                 .setInitialTables(REQUIRED_TPCH_TABLES)
                 .build();
     }
@@ -162,6 +168,26 @@ final class TestIcebergPolarisCatalogConnectorSmokeTest
 
         assertUpdate("DROP SCHEMA \"" + nestedNamespace + "\"");
         assertUpdate("DROP SCHEMA " + parentNamespace);
+    }
+
+    @Test
+    public void testRealmHeaders()
+            throws NoSuchFieldException, IllegalAccessException
+    {
+        TrinoCatalogFactory catalogFactory = ((IcebergConnector) getQueryRunner().getCoordinator().getConnector("iceberg")).getInjector().getInstance(TrinoCatalogFactory.class);
+        TrinoCatalog trinoCatalog = catalogFactory.create(getSession().getIdentity().toConnectorIdentity());
+
+        Field sessionCatalogField = TrinoCatalog.class.getDeclaredField("restSessionCatalog");
+        sessionCatalogField.setAccessible(true);
+        RESTSessionCatalog restSessionCatalog = (RESTSessionCatalog) sessionCatalogField.get(trinoCatalog);
+
+        Field clientField = RESTSessionCatalog.class.getDeclaredField("client");
+        clientField.setAccessible(true);
+
+        HTTPClient restClient = (HTTPClient) clientField.get(restSessionCatalog);
+        Field headersField = HTTPClient.class.getDeclaredField("baseHeaders");
+        Map<String, String> headers = (Map<String, String>) headersField.get(restClient);
+        assertThat(headers).containsEntry("Polaris-Realm", "shadow");
     }
 
     @Test
